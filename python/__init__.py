@@ -101,20 +101,6 @@ ensure_can_health_packet_version = partial(ensure_version, "CAN health", "CAN_HE
 ensure_health_packet_version = partial(ensure_version, "health", "HEALTH_PACKET_VERSION", "health_version")
 
 
-class PandaDEPRECATED:
-  # deprecated devices
-  HW_TYPE_WHITE_PANDA = b'\x01'
-  HW_TYPE_GREY_PANDA = b'\x02'
-  HW_TYPE_BLACK_PANDA = b'\x03'
-  HW_TYPE_PEDAL = b'\x04'
-  HW_TYPE_UNO = b'\x05'
-  HW_TYPE_RED_PANDA_V2 = b'\x08'
-
-  F4_DEVICES = [HW_TYPE_WHITE_PANDA, HW_TYPE_GREY_PANDA, HW_TYPE_BLACK_PANDA, HW_TYPE_UNO]
-  H7_DEVICES = [HW_TYPE_RED_PANDA_V2, ]
-  INTERNAL_DEVICES = (HW_TYPE_UNO, )
-  DEVICES = F4_DEVICES + H7_DEVICES + list(INTERNAL_DEVICES)
-
 
 class Panda:
 
@@ -129,9 +115,13 @@ class Panda:
   # from https://github.com/commaai/openpilot/blob/103b4df18cbc38f4129555ab8b15824d1a672bdf/cereal/log.capnp#L648
   HW_TYPE_UNKNOWN = b'\x00'
   HW_TYPE_WHITE = b'\x01'
+  HW_TYPE_GREY_PANDA = b'\x02'
   HW_TYPE_BLACK = b'\x03'
+  HW_TYPE_PEDAL = b'\x04'
+  HW_TYPE_UNO = b'\x05'
   HW_TYPE_DOS = b'\x06'
   HW_TYPE_RED_PANDA = b'\x07'
+  HW_TYPE_RED_PANDA_V2 = b'\x08'
   HW_TYPE_TRES = b'\x09'
   HW_TYPE_CUATRO = b'\x0a'
 
@@ -145,7 +135,7 @@ class Panda:
   H7_DEVICES = [HW_TYPE_RED_PANDA, HW_TYPE_TRES, HW_TYPE_CUATRO]
 
   INTERNAL_DEVICES = (HW_TYPE_DOS, HW_TYPE_TRES, HW_TYPE_CUATRO)
-  DEPRECATED_DEVICES = (HW_TYPE_WHITE, HW_TYPE_BLACK)
+  DEPRECATED_DEVICES = (HW_TYPE_WHITE, HW_TYPE_BLACK) + (HW_TYPE_GREY_PANDA, HW_TYPE_PEDAL, HW_TYPE_UNO, HW_TYPE_RED_PANDA_V2)
 
   MAX_FAN_RPMs = {
     HW_TYPE_DOS: 6500,
