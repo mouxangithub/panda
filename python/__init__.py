@@ -238,10 +238,6 @@ class Panda:
     self.health_version, self.can_version, self.can_health_version = self.get_packets_versions()
     logger.debug("connected")
 
-    hw_type = self.get_type()
-    if hw_type in Panda.DEPRECATED_DEVICES:
-      print("WARNING: Using deprecated HW")
-
     # disable openpilot's heartbeat checks
     if self._disable_checks:
       self.set_heartbeat_disabled()
