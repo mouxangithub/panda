@@ -1,0 +1,103 @@
+name: Upstream sync → master-c3-new
+
+on:
+  workflow_dispatch:
+    inputs:
+      trigger_openpilot:
+        description: "成功后触发 openpilot 同步"
+        type: boolean
+        default: true
+  repository_dispatch:
+    types: [upstream-sync-run]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: upstream-sync-panda
+  cancel-in-progress: false
+
+env:
+  FORK_BRANCH: master-c3
+  OUTPUT_BRANCH: master-c3-new
+  UPSTREAM_URL: https://github.com/sunnypilot/panda.git
+  UPSTREAM_BRANCH: master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Merge upstream into master-c3-new
+        id: merge
+        run: bash .github/scripts/upstream_sync_merge.sh
+        env:
+          UPSTREAM_URL: ${{ env.UPSTREAM_URL }}
+
+      - name: Load OpenCode prompt
+        if: steps.merge.outputs.merge_conflicts == 'true'
+        id: oc_prompt
+        run: |
+          {
+            echo 'text<<PROMPT_EOF'
+            cat .github/scripts/prompts/upstream_sync_panda.txt
+            echo PROMPT_EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: OpenCode resolve conflicts
+        if: steps.merge.outputs.merge_conflicts == 'true'
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+        with:
+          model: ${{ vars.OPENCODE_MODEL || 'opencode/deepseek-v4-flash' }}
+          use_github_token: true
+          prompt: ${{ steps.oc_prompt.outputs.text }}
+
+      - name: Verify conflict resolution
+        if: steps.merge.outputs.merge_conflicts == 'true'
+        run: bash .github/scripts/upstream_sync_commit_fix.sh
+
+      - name: Run tests
+        env:
+          RUN: source .venv/bin/activate && /bin/bash -c
+        run: |
+          ./setup.sh
+          ${{ env.RUN }} "pip install --break-system-packages .[dev]"
+          ${{ env.RUN }} "scons"
+          ./test.sh
+
+      - name: Push master-c3-new
+        run: git push origin "${{ env.OUTPUT_BRANCH }}" --force-with-lease
+
+      - name: Open PR to master-c3
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          if gh pr list --head "${{ env.OUTPUT_BRANCH }}" --base "${{ env.FORK_BRANCH }}" --json number -q '.[0].number' | grep -q .; then
+            echo "PR already exists"
+          else
+            gh pr create --base "${{ env.FORK_BRANCH }}" --head "${{ env.OUTPUT_BRANCH }}" \
+              --title "sync(panda): sunnypilot master → master-c3-new" \
+              --body "自动上游同步。请 checkout \`master-c3-new\` 自测后再合并 \`master-c3\`。" \
+              --label "ai-auto-review" --label "upstream-sync" || true
+          fi
+
+      - name: Trigger openpilot sync
+        if: >-
+          success() && (
+            github.event_name == 'repository_dispatch' ||
+            (github.event_name == 'workflow_dispatch' && inputs.trigger_openpilot)
+          )
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+          repository: mouxangithub/openpilot
+          event-type: upstream-sync-run
