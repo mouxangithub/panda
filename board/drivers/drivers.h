@@ -46,7 +46,7 @@ extern uint32_t rx_buffer_overflow;
 
 extern can_health_t can_health[PANDA_CAN_CNT];
 
-// Ignition detected from CAN meessages
+// Ignition detected from CAN messages
 extern bool ignition_can;
 extern uint32_t ignition_can_cnt;
 
@@ -254,8 +254,10 @@ void spi_init(void);
 void spi_rx_done(void);
 void spi_tx_done(bool reset);
 
-// ***************************** Definitions *****************************
+// ******************** uart ********************
 #if defined(STM32H7) || defined(STM32F4)
+
+// ***************************** Definitions *****************************
 #define FIFO_SIZE_INT 0x400U
 
 typedef struct uart_ring {

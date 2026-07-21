@@ -230,7 +230,6 @@ class Panda:
     if missing_hw_type_endpoint and bcd is not None:
       self._bcd_hw_type = bcd
     self._assume_f4_mcu = missing_hw_type_endpoint and self._bcd_hw_type is None
-
     self._serial = serial
     self._connect_serial = serial
     self._handle_open = True
@@ -314,7 +313,6 @@ class Panda:
             this_bcd = device.getbcdDevice()
             if this_bcd is not None and this_bcd != 0x2300:
               bcd = bytearray([this_bcd >> 8])
-
             break
     except Exception:
       logger.exception("USB connect error")
@@ -651,7 +649,6 @@ class Panda:
     if self._assume_f4_mcu:
       return McuType.F4
     raise ValueError(f"unknown HW type: {hw_type}")
-
   def get_serial(self):
     """
       Returns the comma-issued dongle ID from our provisioning

@@ -137,6 +137,7 @@ base_project_f4 = {
   ],
 }
 
+
 base_project_h7 = {
   "STARTUP_FILE": "./board/stm32h7/startup_stm32h7x5xx.s",
   "LINKER_SCRIPT": "./board/stm32h7/stm32h7x5_flash.ld",
