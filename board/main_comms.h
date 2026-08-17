@@ -28,7 +28,11 @@ static int get_health_pkt(void *dat) {
   health->heartbeat_lost_pkt = heartbeat_lost;
   health->safety_rx_checks_invalid_pkt = safety_rx_checks_invalid;
 
-  health->spi_error_count_pkt = spi_error_count;
+  #ifdef STM32F4
+    health->spi_error_count_pkt = 0U;
+  #else
+    health->spi_error_count_pkt = spi_error_count;
+  #endif
 
   health->fault_status_pkt = fault_status;
   health->faults_pkt = faults;
@@ -46,7 +50,11 @@ static int get_health_pkt(void *dat) {
 
   health->controls_allowed_sp_pkt = (uint8_t)(((controls_allowed || controls_allowed_lateral) ? 1U : 0U) | (controls_allowed ? 2U : 0U));
 
+#ifdef STM32H7
   health->temperature = dts_get_temperature();
+#else
+  health->temperature = 0.0f;
+#endif
 
   return sizeof(*health);
 }
