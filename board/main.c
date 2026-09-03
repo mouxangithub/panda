@@ -16,7 +16,11 @@
 
 #include "board/drivers/can_common.h"
 
-#include "board/drivers/fdcan.h"
+#ifdef STM32F4
+  #include "board/drivers/bxcan.h"
+#else
+  #include "board/drivers/fdcan.h"
+#endif
 
 #include "board/sys/power_saving.h"
 
@@ -71,6 +75,17 @@ void set_safety_mode(uint16_t mode, uint16_t param) {
       // TODO: rewrite using hardware queues rather than fifo to cancel specific messages
       can_clear_send(CANIF_FROM_CAN_NUM(1), 1);
       if (param == 0U) {
+        current_board->set_can_mode(CAN_MODE_OBD_CAN2);
+      } else {
+        current_board->set_can_mode(CAN_MODE_NORMAL);
+      }
+      can_silent = false;
+      break;
+    case SAFETY_MAZDA:
+      set_intercept_relay(true, false);
+      heartbeat_counter = 0U;
+      heartbeat_lost = false;
+      if (GET_FLAG(param, 1U) && GET_FLAG(param, 8U)) {  // GEN1 with Torque Interceptor
         current_board->set_can_mode(CAN_MODE_OBD_CAN2);
       } else {
         current_board->set_can_mode(CAN_MODE_NORMAL);
@@ -285,7 +300,9 @@ int main(void) {
   led_set(LED_RED, true);
   led_set(LED_GREEN, true);
   adc_init(ADC1);
+#ifdef STM32H7
   dts_init();
+#endif
 
   // print hello
   print("\n\n\n************************ MAIN START ************************\n");

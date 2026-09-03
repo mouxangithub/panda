@@ -30,7 +30,11 @@ static int get_health_pkt(void *dat) {
   health->safety_param_pkt = current_safety_param;
   health->alternative_experience_pkt = alternative_experience;
 
-  health->spi_error_count_pkt = spi_error_count;
+  #ifdef STM32F4
+    health->spi_error_count_pkt = 0U;
+  #else
+    health->spi_error_count_pkt = spi_error_count;
+  #endif
 
   health->fault_status_pkt = fault_status;
   health->faults_pkt = faults;
@@ -45,7 +49,13 @@ static int get_health_pkt(void *dat) {
 
   health->sound_output_level_pkt = sound_output_level;
 
-  float temperature_encoded = (CLAMP(dts_get_temperature(), -40.0f, 214.5f) + 40.0f) + 0.5f;
+  float temperature = 0.0f;
+
+#ifdef STM32H7
+  temperature = dts_get_temperature();
+#endif
+
+  float temperature_encoded = (CLAMP(temperature, -40.0f, 214.5f) + 40.0f) + 0.5f;
   health->temperature_pkt = (uint8_t)temperature_encoded;
 
   health->controls_allowed_sp_pkt = (uint8_t)(((controls_allowed || controls_allowed_lateral) ? 1U : 0U) | (controls_allowed ? 2U : 0U));
