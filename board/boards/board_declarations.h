@@ -30,8 +30,11 @@ struct board {
   const uint8_t led_pwm_channels[3]; // leave at 0 to disable PWM
   const bool has_spi;
   const bool has_fan;
+  const uint16_t fan_max_rpm;
   const uint16_t avdd_mV;
+  const bool fan_stall_recovery;
   const uint8_t fan_enable_cooldown_time;
+  const uint8_t fan_max_pwm;
   board_init init;
   board_init_bootloader init_bootloader;
   board_enable_can_transceiver enable_can_transceiver;
@@ -49,14 +52,28 @@ struct board {
 // ******************* Definitions ********************
 // These should match the enums in cereal/log.capnp and __init__.py
 #define HW_TYPE_UNKNOWN 0U
+#define HW_TYPE_WHITE_PANDA 1U
+#define HW_TYPE_GREY_PANDA 2U
+#define HW_TYPE_BLACK_PANDA 3U
+#define HW_TYPE_PEDAL 4U
+#define HW_TYPE_UNO 5U
+#define HW_TYPE_DOS 6U
 #define HW_TYPE_RED_PANDA 7U
+#define HW_TYPE_RED_PANDA_V2 8U
 #define HW_TYPE_TRES 9U
 #define HW_TYPE_CUATRO 10U
+
+// USB power modes (from cereal.log.health)
+#define USB_POWER_NONE 0U
+#define USB_POWER_CLIENT 1U
+#define USB_POWER_CDP 2U
+#define USB_POWER_DCP 3U
 
 // CAN modes
 #define CAN_MODE_NORMAL 0U
 #define CAN_MODE_OBD_CAN2 1U
 
+extern struct board board_dos;
 extern struct board board_tres;
 extern struct board board_cuatro;
 extern struct board board_red;

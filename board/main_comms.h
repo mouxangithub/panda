@@ -45,8 +45,12 @@ static int get_health_pkt(void *dat) {
 
   health->sound_output_level_pkt = sound_output_level;
 
-  float temperature_encoded = (CLAMP(dts_get_temperature(), -40.0f, 214.5f) + 40.0f) + 0.5f;
-  health->temperature_pkt = (uint8_t)temperature_encoded;
+  #ifdef STM32H7
+    float temperature_encoded = (CLAMP(dts_get_temperature(), -40.0f, 214.5f) + 40.0f) + 0.5f;
+    health->temperature_pkt = (uint8_t)temperature_encoded;
+  #else
+    health->temperature_pkt = 0U;
+  #endif
 
   health->controls_allowed_sp_pkt = (uint8_t)(((controls_allowed || controls_allowed_lateral) ? 1U : 0U) | (controls_allowed ? 2U : 0U));
 
@@ -312,6 +316,10 @@ int comms_control_handler(ControlPacket_t *req, uint8_t *resp) {
     // **** 0xf6: set siren enabled
     case 0xf6:
       siren_enabled = (req->param1 != 0U);
+      break;
+    // **** 0xf7: set green led enabled
+    case 0xf7:
+      green_led_enabled = (req->param1 != 0U);
       break;
     // **** 0xf8: disable heartbeat checks
     case 0xf8:
