@@ -247,12 +247,22 @@ class Panda:
     if self._handle is None:
       raise Exception("failed to connect to panda")
 
+    # Some fallback logic to determine panda and MCU type for old bootstubs,
+    # since we now support multiple MCUs and need to know which fw to flash.
+    # Three cases to consider:
+    # A) oldest bootstubs don't have any way to distinguish
+    #    MCU or panda type
+    # B) slightly newer (~2 weeks after first C3's built) bootstubs
+    #    have the panda type set in the USB bcdDevice
+    # C) latest bootstubs also implement the endpoint for panda type
     self._bcd_hw_type = None
     ret = self._handle.controlRead(Panda.REQUEST_IN, 0xc1, 0, 0, 0x40)
     missing_hw_type_endpoint = self.bootstub and isinstance(ret, (bytes, bytearray)) and ret.startswith(b'\xff\x00\xc1\x3e\xde\xad\xd0\x0d')
     if missing_hw_type_endpoint and bcd is not None:
       self._bcd_hw_type = bcd
-    self._assume_f4_mcu = missing_hw_type_endpoint and self._bcd_hw_type is None
+
+    # For case A, we assume F4 MCU type, since all H7 pandas should be case B at worst
+    self._assume_f4_mcu = (self._bcd_hw_type is None) and missing_hw_type_endpoint
 
     self._serial = serial
     self._connect_serial = serial
@@ -335,9 +345,10 @@ class Panda:
               handle.claimInterface(0)
               # handle.setInterfaceAltSetting(0, 0)  # Issue in USB stack
 
+            # bcdDevice wasn't always set to the hw type, ignore if it's the old constant
             this_bcd = device.getbcdDevice()
             if this_bcd is not None and this_bcd != 0x2300:
-              bcd = bytearray([this_bcd >> 8])
+              bcd = bytearray([this_bcd >> 8, ])
 
             break
     except Exception:
@@ -655,8 +666,11 @@ class Panda:
 
   def get_type(self):
     ret = self._handle.controlRead(Panda.REQUEST_IN, 0xc1, 0, 0, 0x40)
+
+    # old bootstubs don't implement this endpoint, see comment in Panda.connect
     if self._bcd_hw_type is not None and (ret is None or len(ret) != 1):
       ret = self._bcd_hw_type
+
     return ret
 
   def get_packets_versions(self):
@@ -674,8 +688,10 @@ class Panda:
       return McuType.F4
     if hw_type in Panda.H7_DEVICES:
       return McuType.H7
+    # have to assume F4, see comment in Panda.connect
     if self._assume_f4_mcu:
       return McuType.F4
+
     raise ValueError(f"unknown HW type: {hw_type}")
 
   def get_serial(self):
