@@ -21,5 +21,8 @@ extern bool heartbeat_disabled;
 // siren state
 extern bool siren_enabled;
 
+// led state
+extern bool green_led_enabled;
+
 // sound
 extern uint16_t sound_output_level;

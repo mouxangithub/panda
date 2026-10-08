@@ -19,8 +19,16 @@ bool can_loopback = false;
   extern can_ring can_##x; \
   can_ring can_##x = { .w_ptr = 0, .r_ptr = 0, .fifo_size = (size), .elems = (CANPacket_t *)&(elems_##x) };
 
-#define CAN_RX_BUFFER_SIZE 4096U
-#define CAN_TX_BUFFER_SIZE 416U
+#ifdef STM32F4
+  // CANPacket_t is 16 bytes here, because opendbc sizes the data field for a
+  // classic controller on this target. These are the depths upstream ran on a
+  // dos and they fit well clear of the stack.
+  #define CAN_RX_BUFFER_SIZE 1024U
+  #define CAN_TX_BUFFER_SIZE 256U
+#else
+  #define CAN_RX_BUFFER_SIZE 4096U
+  #define CAN_TX_BUFFER_SIZE 416U
+#endif
 
 #ifdef STM32H7
 // ITCM RAM and DTCM RAM are the fastest for Cortex-M7 core access
@@ -121,6 +129,10 @@ bus_config_t bus_config[PANDA_CAN_CNT] = {
 
 void can_init_all(void) {
   for (uint8_t i=0U; i < PANDA_CAN_CNT; i++) {
+    #ifdef STM32F4
+      // bxCAN is classic CAN only, don't advertise a data phase speed
+      bus_config[i].can_data_speed = 0U;
+    #endif
     bus_config[i].canfd_enabled = false;
     can_clear(can_queues[i]);
     (void)can_init(i);

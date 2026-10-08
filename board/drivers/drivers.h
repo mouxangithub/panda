@@ -6,6 +6,11 @@
 #ifdef STM32H7
 #include "board/stm32h7/lladc_declarations.h"
 #endif
+#ifdef STM32F4
+#include "board/stm32f4/lladc_declarations.h"
+#include "board/stm32f4/llbxcan_declarations.h"
+#include "board/drivers/bxcan_declarations.h"
+#endif
 
 // ******************** bootkick ********************
 
@@ -40,7 +45,7 @@ extern uint32_t rx_buffer_overflow;
 
 extern can_health_t can_health[PANDA_CAN_CNT];
 
-// Ignition detected from CAN messages
+// Ignition detected from CAN meessages
 extern bool ignition_can;
 extern uint32_t ignition_can_cnt;
 
@@ -70,6 +75,10 @@ extern bus_config_t bus_config[PANDA_CAN_CNT];
 
 void can_init_all(void);
 void can_set_orientation(bool flipped);
+#ifdef PANDA_JUNGLE
+void can_set_forwarding(uint8_t from, uint8_t to);
+#endif
+void ignition_can_hook(const CANPacket_t *to_push);
 bool can_tx_check_min_slots_free(uint32_t min);
 void can_set_checksum(CANPacket_t *packet);
 bool can_check_checksum(CANPacket_t *packet);
@@ -97,7 +106,7 @@ void fan_init(void);
 // Call this at FAN_TICK_FREQ
 void fan_tick(void);
 
-// ******************** fdcan ********************
+// ******************** fdcan/bxcan ********************
 #ifdef STM32H7
 
 typedef struct {
@@ -113,7 +122,21 @@ void can_clear_send(FDCAN_GlobalTypeDef *FDCANx, uint8_t can_number);
 void update_can_health_pkt(uint8_t can_number, uint32_t ir_reg);
 
 
+#elif defined(STM32F4)
+
+extern CAN_TypeDef *cans[CAN_ARRAY_SIZE];
+
+void can_clear_send(CAN_TypeDef *CANx, uint8_t can_number);
+void update_can_health_pkt(uint8_t can_number, uint32_t ir_reg);
+
+void process_can(uint8_t can_number);
+void can_rx(uint8_t can_number);
+bool can_init(uint8_t can_number);
+
+#endif
+
 // ******************** harness ********************
+#if defined(STM32H7) || defined(STM32F4)
 
 #define HARNESS_STATUS_NC 0U
 #define HARNESS_STATUS_NORMAL 1U
@@ -176,7 +199,7 @@ void handle_interrupt(IRQn_Type irq_type);
 void interrupt_timer_handler(void);
 void init_interrupts(bool check_rate_limit);
 
-#endif // STM32H7
+#endif
 
 // ******************** registers ********************
 

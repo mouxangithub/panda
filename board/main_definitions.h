@@ -14,3 +14,6 @@ bool heartbeat_disabled = false;            // set over USB
 
 // siren state
 bool siren_enabled = false;
+
+// led state
+bool green_led_enabled = false;
