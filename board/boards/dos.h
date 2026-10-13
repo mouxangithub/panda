@@ -128,7 +128,6 @@ board board_dos = {
   .avdd_mV = 3300U,
   .fan_enable_cooldown_time = 3U,
   .init = dos_init,
-  .init_bootloader = unused_init_bootloader,
   .enable_can_transceiver = dos_enable_can_transceiver,
   .led_GPIO = {GPIOC, GPIOC, GPIOC},
   .led_pin = {9, 7, 6},

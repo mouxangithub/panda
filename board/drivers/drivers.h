@@ -251,7 +251,6 @@ void spi_tx_done(bool reset);
 bool debug_get_char(char *elem);
 void print(const char *a);
 void puth(unsigned int i);
-static void hexdump(const void *a, int l);
 static inline void puth4(unsigned int i);
 
 // ******************** usb ********************

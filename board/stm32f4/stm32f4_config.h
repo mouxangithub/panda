@@ -54,8 +54,7 @@
 #include "board/stm32f4/clock.h"
 
 #if !defined(BOOTSTUB)
-  #include "board/drivers/uart.h"
-  #include "board/stm32f4/lluart.h"
+  #include "board/drivers/debug.h"
 #endif
 
 #ifdef BOOTSTUB
